@@ -10,7 +10,7 @@ import SwiftUI
 
 struct FollowersView: View {
     let username: String
-    @StateObject var viewModel: FollowersViewModel
+    @State var viewModel: FollowersViewModel
 
     var body: some View {
         Group {

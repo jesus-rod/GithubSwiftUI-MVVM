@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
 
-    @StateObject private var viewModel = UserViewModel(
+    @State private var viewModel = UserViewModel(
         networkService: NetworkService.shared
     )
     var body: some View {

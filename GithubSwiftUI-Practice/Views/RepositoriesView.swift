@@ -9,7 +9,7 @@ import SwiftUI
 
 struct RepositoriesView: View {
     let username: String
-    @StateObject var viewModel: ReposViewModel
+    @State var viewModel: ReposViewModel
 
     var body: some View {
         Group {

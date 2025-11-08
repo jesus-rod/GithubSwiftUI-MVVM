@@ -8,10 +8,11 @@
 import Foundation
 
 @MainActor
-class FollowersViewModel: ObservableObject {
-    @Published var followers: [GHUser] = []
-    @Published var isLoading = false
-    @Published var errorMessage: String?
+@Observable
+class FollowersViewModel {
+    var followers: [GHUser] = []
+    var isLoading = false
+    var errorMessage: String?
     
     private let networkService: NetworkServiceProtocol
     

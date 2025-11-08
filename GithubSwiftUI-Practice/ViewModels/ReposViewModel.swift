@@ -5,14 +5,15 @@
 //  Created by jesus on 08.11.25.
 //
 
-import Combine
+import Foundation
 
 @MainActor
-class ReposViewModel: ObservableObject {
+@Observable
+class ReposViewModel {
 
-    @Published var repos: [GHRepo] = []
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
+    var repos: [GHRepo] = []
+    var isLoading: Bool = false
+    var errorMessage: String?
 
     private let networkService: NetworkServiceProtocol
 

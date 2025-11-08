@@ -6,14 +6,14 @@
 //
 
 import Foundation
-import Combine
 
 @MainActor
-class UserViewModel: ObservableObject {
+@Observable
+class UserViewModel {
     
-    @Published var user: GHUser?
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
+    var user: GHUser?
+    var isLoading: Bool = false
+    var errorMessage: String?
     
     private let networkService: NetworkServiceProtocol
     
