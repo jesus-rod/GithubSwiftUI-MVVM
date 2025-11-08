@@ -22,7 +22,6 @@ struct ContentView: View {
                     UserView(user: user)
                 } else {
                     UserPlaceHolderView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .refreshable {
@@ -38,6 +37,8 @@ struct ContentView: View {
 
 struct UserView: View {
     let user: GHUser
+    @State private var navigateToRepos = false
+    
     var body: some View {
         VStack(spacing: 16) {
             AsyncImage(url: URL(string: user.avatarUrl)) { image in
@@ -66,13 +67,23 @@ struct UserView: View {
             }
             // Stats
             HStack(spacing: 40) {
-                StatView(title: "Repos", value: user.publicRepos ?? 0)
-                StatView(title: "Followers", value: user.followers)
-                StatView(title: "Following", value: user.following)
+                StatView(title: "Repos", value: user.publicRepos ?? 0) {
+                    navigateToRepos = true
+                }
+                StatView(title: "Followers", value: user.followers) {
+                    print("Followers tapped - could show followers list")
+                }
+                StatView(title: "Following", value: user.following) {
+                    print("Following tapped - could show following list")
+                }
             }
             .padding(.top, 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .navigationDestination(isPresented: $navigateToRepos) {
+            let reposVm = ReposViewModel(networkService: NetworkService.shared)
+            RepositoriesView(username: user.login, viewModel: reposVm)
+        }
     }
 }
 
@@ -80,7 +91,14 @@ struct UserView: View {
 struct StatView: View {
     let title: String
     let value: Int
-
+    let action: (() -> Void)?
+    
+    init(title: String, value: Int, action: (() -> Void)? = nil) {
+        self.title = title
+        self.value = value
+        self.action = action
+    }
+    
     var body: some View {
         VStack {
             Text("\(value)")
@@ -90,8 +108,13 @@ struct StatView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+        .onTapGesture {
+            action?()
+        }
     }
 }
+
+
 
 struct UserPlaceHolderView: View {
     var body: some View {

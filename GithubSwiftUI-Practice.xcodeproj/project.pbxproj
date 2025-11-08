@@ -6,8 +6,19 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		EA6673292EBF48790036B10C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EA3E83BB2EBEECF000011FA6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EA3E83C22EBEECF000011FA6;
+			remoteInfo = "GithubSwiftUI-Practice";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		EA3E83C32EBEECF000011FA6 /* GithubSwiftUI-Practice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "GithubSwiftUI-Practice.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		EA6673252EBF48790036B10C /* GithubSwiftUI-PracticeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "GithubSwiftUI-PracticeTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -29,10 +40,22 @@
 			path = "GithubSwiftUI-Practice";
 			sourceTree = "<group>";
 		};
+		EA6673262EBF48790036B10C /* GithubSwiftUI-PracticeTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "GithubSwiftUI-PracticeTests";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		EA3E83C02EBEECF000011FA6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA6673222EBF48790036B10C /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -46,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				EA3E83C52EBEECF000011FA6 /* GithubSwiftUI-Practice */,
+				EA6673262EBF48790036B10C /* GithubSwiftUI-PracticeTests */,
 				EA3E83C42EBEECF000011FA6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				EA3E83C32EBEECF000011FA6 /* GithubSwiftUI-Practice.app */,
+				EA6673252EBF48790036B10C /* GithubSwiftUI-PracticeTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -83,6 +108,29 @@
 			productReference = EA3E83C32EBEECF000011FA6 /* GithubSwiftUI-Practice.app */;
 			productType = "com.apple.product-type.application";
 		};
+		EA6673242EBF48790036B10C /* GithubSwiftUI-PracticeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EA66732D2EBF48790036B10C /* Build configuration list for PBXNativeTarget "GithubSwiftUI-PracticeTests" */;
+			buildPhases = (
+				EA6673212EBF48790036B10C /* Sources */,
+				EA6673222EBF48790036B10C /* Frameworks */,
+				EA6673232EBF48790036B10C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				EA66732A2EBF48790036B10C /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				EA6673262EBF48790036B10C /* GithubSwiftUI-PracticeTests */,
+			);
+			name = "GithubSwiftUI-PracticeTests";
+			packageProductDependencies = (
+			);
+			productName = "GithubSwiftUI-PracticeTests";
+			productReference = EA6673252EBF48790036B10C /* GithubSwiftUI-PracticeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -95,6 +143,10 @@
 				TargetAttributes = {
 					EA3E83C22EBEECF000011FA6 = {
 						CreatedOnToolsVersion = 26.0.1;
+					};
+					EA6673242EBF48790036B10C = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = EA3E83C22EBEECF000011FA6;
 					};
 				};
 			};
@@ -113,12 +165,20 @@
 			projectRoot = "";
 			targets = (
 				EA3E83C22EBEECF000011FA6 /* GithubSwiftUI-Practice */,
+				EA6673242EBF48790036B10C /* GithubSwiftUI-PracticeTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		EA3E83C12EBEECF000011FA6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EA6673232EBF48790036B10C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -135,7 +195,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		EA6673212EBF48790036B10C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		EA66732A2EBF48790036B10C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EA3E83C22EBEECF000011FA6 /* GithubSwiftUI-Practice */;
+			targetProxy = EA6673292EBF48790036B10C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		EA3E83CC2EBEECF100011FA6 /* Debug */ = {
@@ -322,6 +397,49 @@
 			};
 			name = Release;
 		};
+		EA66732B2EBF48790036B10C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "jesusrod.GithubSwiftUI-PracticeTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GithubSwiftUI-Practice.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GithubSwiftUI-Practice";
+			};
+			name = Debug;
+		};
+		EA66732C2EBF48790036B10C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "jesusrod.GithubSwiftUI-PracticeTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/GithubSwiftUI-Practice.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/GithubSwiftUI-Practice";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -339,6 +457,15 @@
 			buildConfigurations = (
 				EA3E83CF2EBEECF100011FA6 /* Debug */,
 				EA3E83D02EBEECF100011FA6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EA66732D2EBF48790036B10C /* Build configuration list for PBXNativeTarget "GithubSwiftUI-PracticeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EA66732B2EBF48790036B10C /* Debug */,
+				EA66732C2EBF48790036B10C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
