@@ -14,23 +14,23 @@ struct ContentView: View {
     )
     var body: some View {
         NavigationStack {
-            ZStack {
+            ScrollView {
                 if viewModel.isLoading {
                     ProgressView("Loading")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let user = viewModel.user {
                     UserView(user: user)
                 } else {
                     UserPlaceHolderView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-
+            }
+            .refreshable {
+                await viewModel.fetchUser("octocat")
             }
         }
-        .navigationTitle("GitHub User")
         .task {
             await viewModel.fetchUser("jesus-rod")
-        }
-        .refreshable {
-            await viewModel.fetchUser("octocat")
         }
     }
 
@@ -39,7 +39,7 @@ struct ContentView: View {
 struct UserView: View {
     let user: GHUser
     var body: some View {
-        VStack {
+        VStack(spacing: 16) {
             AsyncImage(url: URL(string: user.avatarUrl)) { image in
                 image.resizable()
             } placeholder: {
@@ -48,7 +48,7 @@ struct UserView: View {
             .frame(width: 120, height: 120)
             .clipShape(Circle())
 
-            VStack(spacing: 8) {
+            VStack(spacing: 4) {
                 if let name = user.name {
                     Text(name)
                         .font(.title)
@@ -70,9 +70,9 @@ struct UserView: View {
                 StatView(title: "Followers", value: user.followers)
                 StatView(title: "Following", value: user.following)
             }
-            .padding()
-            Spacer()
+            .padding(.top, 8)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
