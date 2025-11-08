@@ -29,8 +29,9 @@ enum NetworkError: Error {
     }
 }
 
-public protocol NetworkServiceProtocol {
+protocol NetworkServiceProtocol {
     func fetchUser(username: String) async throws -> GHUser
+    func fetchRepos(for username: String) async throws -> [GHRepo]
 }
 
 class NetworkService: NetworkServiceProtocol {
