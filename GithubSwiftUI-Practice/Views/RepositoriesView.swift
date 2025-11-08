@@ -10,11 +10,30 @@ import SwiftUI
 struct RepositoriesView: View {
     let username: String
     @StateObject var viewModel: ReposViewModel
-    
+
     var body: some View {
-        List {
-            ForEach(viewModel.repos ?? [], id: \.id) { item in
-                Text(item.name)
+        Group {
+            if viewModel.isLoading {
+                ProgressView("Loading repositories...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let error = viewModel.errorMessage {
+                ContentUnavailableView(
+                    "Error Loading Repositories",
+                    systemImage: "exclamationmark.triangle",
+                    description: Text(error)
+                )
+            } else if viewModel.repos.isEmpty {
+                ContentUnavailableView(
+                    "No Repositories",
+                    systemImage: "folder",
+                    description: Text("This user has no public repositories")
+                )
+            } else {
+                List {
+                    ForEach(viewModel.repos) { item in
+                        Text(item.name)
+                    }
+                }
             }
         }
         .navigationTitle("Repositories")
