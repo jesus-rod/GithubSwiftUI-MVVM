@@ -38,6 +38,7 @@ struct ContentView: View {
 struct UserView: View {
     let user: GHUser
     @State private var navigateToRepos = false
+    @State private var navigateToFollowers = false
     
     var body: some View {
         VStack(spacing: 16) {
@@ -70,10 +71,10 @@ struct UserView: View {
                 StatView(title: "Repos", value: user.publicRepos ?? 0) {
                     navigateToRepos = true
                 }
-                StatView(title: "Followers", value: user.followers) {
-                    print("Followers tapped - could show followers list")
+                StatView(title: "Followers", value: user.followers ?? 0) {
+                    navigateToFollowers = true
                 }
-                StatView(title: "Following", value: user.following) {
+                StatView(title: "Following", value: user.following ?? 0) {
                     print("Following tapped - could show following list")
                 }
             }
@@ -83,6 +84,10 @@ struct UserView: View {
         .navigationDestination(isPresented: $navigateToRepos) {
             let reposVm = ReposViewModel(networkService: NetworkService.shared)
             RepositoriesView(username: user.login, viewModel: reposVm)
+        }
+        .navigationDestination(isPresented: $navigateToFollowers) {
+            let followersVm = FollowersViewModel(networkService: NetworkService.shared)
+            FollowersView(username: user.login, viewModel: followersVm)
         }
     }
 }
@@ -100,14 +105,21 @@ struct StatView: View {
     }
     
     var body: some View {
-        VStack {
+        VStack(spacing: 4) {
             Text("\(value)")
                 .font(.title2)
                 .bold()
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            HStack(spacing: 2) {
+                Text(title)
+                    .font(.caption)
+                if action != nil {
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                }
+            }
+            .foregroundStyle(.secondary)
         }
+        .contentShape(Rectangle())
         .onTapGesture {
             action?()
         }

@@ -12,10 +12,10 @@ public struct GHUser: Decodable, Identifiable {
     let bio: String?
     let name: String?
     let publicRepos: Int?
-    let followers: Int
-    let following: Int
+    let followers: Int?
+    let following: Int?
     
-    public init(id: Int, login: String, avatarUrl: String, bio: String?, name: String?, publicRepos: Int?, followers: Int, following: Int) {
+    public init(id: Int, login: String, avatarUrl: String, bio: String?, name: String?, publicRepos: Int?, followers: Int?, following: Int?) {
         self.id = id
         self.login = login
         self.avatarUrl = avatarUrl
