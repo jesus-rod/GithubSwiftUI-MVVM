@@ -17,7 +17,7 @@ class UserViewModel {
     
     private let networkService: NetworkServiceProtocol
     
-    init(networkService: NetworkServiceProtocol) {
+    init(networkService: NetworkServiceProtocol = NetworkService.shared) {
         self.networkService = networkService
     }
     

@@ -37,13 +37,14 @@ enum NetworkError: Error {
     }
 }
 
-protocol NetworkServiceProtocol {
+protocol NetworkServiceProtocol: Sendable {
     func fetchUser(username: String) async throws -> GHUser
     func fetchRepos(for username: String) async throws -> [GHRepo]
     func fetchFollowers(for username: String) async throws -> [GHUser]
+    func searchPopularRepositories(page: Int, perPage: Int) async throws -> SearchResponse<GHRepo>
 }
 
-class NetworkService: NetworkServiceProtocol {
+actor NetworkService: NetworkServiceProtocol {
 
     static let shared = NetworkService()
 
@@ -76,6 +77,12 @@ class NetworkService: NetworkServiceProtocol {
 
     func fetchFollowers(for username: String) async throws -> [GHUser] {
         try await fetch(endpoint: "/users/\(username)/followers")
+    }
+
+    func searchPopularRepositories(page: Int = 1, perPage: Int = 30) async throws -> SearchResponse<GHRepo> {
+        let query = "stars:>1"
+        let endpoint = "/search/repositories?q=\(query)&sort=stars&order=desc&per_page=\(perPage)&page=\(page)"
+        return try await fetch(endpoint: endpoint)
     }
 
     // MARK: - Private Helpers

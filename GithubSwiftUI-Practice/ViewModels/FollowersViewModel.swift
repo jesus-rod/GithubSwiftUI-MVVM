@@ -6,7 +6,6 @@
 //
 
 import Foundation
-
 @MainActor
 @Observable
 class FollowersViewModel {
@@ -16,9 +15,10 @@ class FollowersViewModel {
     
     private let networkService: NetworkServiceProtocol
     
-    init(networkService: NetworkServiceProtocol) {
+    init(networkService: NetworkServiceProtocol = NetworkService.shared) {
         self.networkService = networkService
     }
+    
     
     func fetchFollowers(for username: String) async {
         isLoading = true

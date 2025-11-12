@@ -5,7 +5,7 @@
 //  Created by jesus on 08.11.25.
 //
 
-public struct GHUser: Decodable, Identifiable {
+public struct GHUser: Decodable, Identifiable, Sendable {
     public let id: Int
     let login: String
     let avatarUrl: String

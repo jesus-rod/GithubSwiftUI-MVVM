@@ -1,6 +1,18 @@
-class MockNetworkService: NetworkServiceProtocol {
+//
+//  MockNetworkService.swift
+//  GithubSwiftUI-Practice
+//
+//  Created by jesus on 09.11.25.
+//
+
+@testable import GithubSwiftUI_Practice
+actor MockNetworkService: NetworkServiceProtocol {
 
     var shouldFail: Bool = false
+    
+    func setShouldFail(_ value: Bool) {
+        shouldFail = value
+    }
 
     func fetchUser(username: String) async throws -> GithubSwiftUI_Practice.GHUser {
         if shouldFail {

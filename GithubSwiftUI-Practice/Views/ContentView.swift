@@ -9,9 +9,8 @@ import SwiftUI
 
 struct ContentView: View {
 
-    @State private var viewModel = UserViewModel(
-        networkService: NetworkService.shared
-    )
+    @State private var viewModel = UserViewModel()
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -39,7 +38,8 @@ struct UserView: View {
     let user: GHUser
     @State private var navigateToRepos = false
     @State private var navigateToFollowers = false
-    
+    @State private var popularReposViewModel = PopularReposViewModel()
+
     var body: some View {
         VStack(spacing: 16) {
             AsyncImage(url: URL(string: user.avatarUrl)) { image in
@@ -79,14 +79,20 @@ struct UserView: View {
                 }
             }
             .padding(.top, 8)
+
+            // Popular Repositories Section
+            Divider()
+                .padding(.vertical, 8)
+
+            PopularRepositoriesListView(viewModel: popularReposViewModel)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationDestination(isPresented: $navigateToRepos) {
-            let reposVm = ReposViewModel(networkService: NetworkService.shared)
+            let reposVm = ReposViewModel()
             RepositoriesView(username: user.login, viewModel: reposVm)
         }
         .navigationDestination(isPresented: $navigateToFollowers) {
-            let followersVm = FollowersViewModel(networkService: NetworkService.shared)
+            let followersVm = FollowersViewModel()
             FollowersView(username: user.login, viewModel: followersVm)
         }
     }

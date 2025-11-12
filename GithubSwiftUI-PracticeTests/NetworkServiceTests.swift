@@ -189,7 +189,151 @@ final class NetworkServiceTests: XCTestCase {
     }
 
     func test_GHRepo_conformsToIdentifiable() {
-        let repo = GHRepo(id: 42, name: "test-repo", description: nil, language: nil, visibility: "public")
+        let repo = GHRepo(id: 42, name: "test-repo", fullName: nil, description: nil, language: nil, visibility: "public", stargazersCount: nil, forksCount: nil, watchersCount: nil, openIssuesCount: nil, owner: nil)
         XCTAssertEqual(repo.id, 42)
+    }
+
+    // MARK: - SearchResponse Tests
+
+    func test_SearchResponse_decodesCorrectly() throws {
+        let json = """
+        {
+            "total_count": 100,
+            "incomplete_results": false,
+            "items": [
+                {
+                    "id": 1,
+                    "name": "repo1",
+                    "visibility": "public"
+                },
+                {
+                    "id": 2,
+                    "name": "repo2",
+                    "visibility": "private"
+                }
+            ]
+        }
+        """
+
+        let data = json.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        let response = try decoder.decode(SearchResponse<GHRepo>.self, from: data)
+
+        XCTAssertEqual(response.totalCount, 100)
+        XCTAssertFalse(response.incompleteResults)
+        XCTAssertEqual(response.items.count, 2)
+        XCTAssertEqual(response.items[0].name, "repo1")
+        XCTAssertEqual(response.items[1].name, "repo2")
+    }
+
+    func test_SearchResponse_decodesWithEmptyItems() throws {
+        let json = """
+        {
+            "total_count": 0,
+            "incomplete_results": false,
+            "items": []
+        }
+        """
+
+        let data = json.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        let response = try decoder.decode(SearchResponse<GHRepo>.self, from: data)
+
+        XCTAssertEqual(response.totalCount, 0)
+        XCTAssertFalse(response.incompleteResults)
+        XCTAssertTrue(response.items.isEmpty)
+    }
+
+    // MARK: - RepositoryOwner Tests
+
+    func test_RepositoryOwner_decodesCorrectly() throws {
+        let json = """
+        {
+            "login": "octocat",
+            "id": 1,
+            "avatar_url": "https://github.com/images/error/octocat_happy.gif"
+        }
+        """
+
+        let data = json.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        let owner = try decoder.decode(RepositoryOwner.self, from: data)
+
+        XCTAssertEqual(owner.login, "octocat")
+        XCTAssertEqual(owner.id, 1)
+        XCTAssertEqual(owner.avatarUrl, "https://github.com/images/error/octocat_happy.gif")
+    }
+
+    // MARK: - GHRepo with Search Fields Tests
+
+    func test_GHRepo_decodesWithSearchFields() throws {
+        let json = """
+        {
+            "id": 456,
+            "name": "Hello-World",
+            "full_name": "octocat/Hello-World",
+            "description": "My first repository",
+            "language": "Swift",
+            "visibility": "public",
+            "stargazers_count": 1000,
+            "forks_count": 200,
+            "watchers_count": 500,
+            "open_issues_count": 10,
+            "owner": {
+                "login": "octocat",
+                "id": 1,
+                "avatar_url": "https://github.com/octocat.png"
+            }
+        }
+        """
+
+        let data = json.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        let repo = try decoder.decode(GHRepo.self, from: data)
+
+        XCTAssertEqual(repo.id, 456)
+        XCTAssertEqual(repo.name, "Hello-World")
+        XCTAssertEqual(repo.fullName, "octocat/Hello-World")
+        XCTAssertEqual(repo.description, "My first repository")
+        XCTAssertEqual(repo.language, "Swift")
+        XCTAssertEqual(repo.visibility, "public")
+        XCTAssertEqual(repo.stargazersCount, 1000)
+        XCTAssertEqual(repo.forksCount, 200)
+        XCTAssertEqual(repo.watchersCount, 500)
+        XCTAssertEqual(repo.openIssuesCount, 10)
+        XCTAssertNotNil(repo.owner)
+        XCTAssertEqual(repo.owner?.login, "octocat")
+    }
+
+    func test_GHRepo_decodesWithoutOwner() throws {
+        let json = """
+        {
+            "id": 456,
+            "name": "Hello-World",
+            "visibility": "public",
+            "stargazers_count": 1000
+        }
+        """
+
+        let data = json.data(using: .utf8)!
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        let repo = try decoder.decode(GHRepo.self, from: data)
+
+        XCTAssertEqual(repo.id, 456)
+        XCTAssertEqual(repo.name, "Hello-World")
+        XCTAssertEqual(repo.stargazersCount, 1000)
+        XCTAssertNil(repo.owner)
+        XCTAssertNil(repo.fullName)
+        XCTAssertNil(repo.description)
     }
 }

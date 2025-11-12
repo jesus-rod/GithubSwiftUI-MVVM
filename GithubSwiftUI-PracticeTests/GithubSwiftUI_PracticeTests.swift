@@ -8,43 +8,6 @@
 import XCTest
 @testable import GithubSwiftUI_Practice
 
-class MockNetworkService: NetworkServiceProtocol {
-    
-    
-    var shouldFail: Bool = false
-    func fetchUser(username: String) async throws -> GithubSwiftUI_Practice.GHUser {
-        if shouldFail {
-            throw NetworkError.invalidResponse
-        }
-        return GHUser(id: 1,
-                      login: username,
-                      avatarUrl: "test", bio: "testBio",
-                      name: "Test Name", publicRepos: 10, followers: 10, following: 10)
-    }
-    
-    func fetchRepos(for username: String) async throws -> [GithubSwiftUI_Practice.GHRepo] {
-        if shouldFail {
-            throw NetworkError.invalidResponse
-        }
-        return [
-            GHRepo(id: 1, name: "iOS Repo", description: "SwiftUI things", language: "Swift", visibility: "Public"),
-            GHRepo(id: 1, name: "TypeScript Repo", description: "Testing Advanced TS features", language: "Typescript", visibility: "Private")
-        ]
-    }
-    
-    func fetchFollowers(for username: String) async throws -> [GithubSwiftUI_Practice.GHUser] {
-        if shouldFail {
-            throw NetworkError.invalidResponse
-        }
-        return [
-            GHUser(id: 1, login: "follower1", avatarUrl: "test1", bio: "Test Bio 1", name: "Follower One", publicRepos: 5, followers: 20, following: 15),
-            GHUser(id: 2, login: "follower2", avatarUrl: "test2", bio: "Test Bio 2", name: "Follower Two", publicRepos: 8, followers: 30, following: 25)
-        ]
-    }
-    
-    
-}
-
 @MainActor
 final class GithubSwiftUI_PracticeTests: XCTestCase {
     
@@ -60,7 +23,7 @@ final class GithubSwiftUI_PracticeTests: XCTestCase {
     
     func test_viewModelFetchesUserFailure() async {
         let mockNetworkService = MockNetworkService()
-        mockNetworkService.shouldFail = true
+        await mockNetworkService.setShouldFail(true)
         let viewModel = UserViewModel(networkService: mockNetworkService)
         
         await viewModel.fetchUser("test-user")
@@ -80,7 +43,7 @@ final class GithubSwiftUI_PracticeTests: XCTestCase {
     
     func test_viewModelFetchesReposFailure() async {
         let mockNetworkService = MockNetworkService()
-        mockNetworkService.shouldFail = true
+        await mockNetworkService.setShouldFail(true)
         let viewModel = ReposViewModel(networkService: mockNetworkService)
         await viewModel.fetchRepos(for: "test-user")
         XCTAssertEqual(viewModel.repos.count, 0)
@@ -102,12 +65,101 @@ final class GithubSwiftUI_PracticeTests: XCTestCase {
     
     func test_viewModelFetchesFollowersFailure() async {
         let mockNetworkService = MockNetworkService()
-        mockNetworkService.shouldFail = true
+        await mockNetworkService.setShouldFail(true)
         let viewModel = FollowersViewModel(networkService: mockNetworkService)
-        
+
         await viewModel.fetchFollowers(for: "test-user")
         XCTAssertTrue(viewModel.followers.isEmpty)
         XCTAssertNotNil(viewModel.errorMessage)
         XCTAssertFalse(viewModel.isLoading)
+    }
+
+    // MARK: - PopularReposViewModel Tests
+
+    func test_popularReposViewModel_fetchesSuccessfully() async {
+        let mockNetworkService = MockNetworkService()
+        let viewModel = PopularReposViewModel(networkService: mockNetworkService)
+
+        await viewModel.fetchPopularRepositories(page: 1)
+
+        XCTAssertEqual(viewModel.repositories.count, 3)
+        XCTAssertEqual(viewModel.currentPage, 1)
+        XCTAssertEqual(viewModel.totalCount, 100)
+        XCTAssertTrue(viewModel.hasMorePages)
+        XCTAssertNil(viewModel.errorMessage)
+        XCTAssertFalse(viewModel.isLoading)
+    }
+
+    func test_popularReposViewModel_fetchesFailure() async {
+        let mockNetworkService = MockNetworkService()
+        await mockNetworkService.setShouldFail(true)
+        let viewModel = PopularReposViewModel(networkService: mockNetworkService)
+
+        await viewModel.fetchPopularRepositories(page: 1)
+
+        XCTAssertTrue(viewModel.repositories.isEmpty)
+        XCTAssertNotNil(viewModel.errorMessage)
+        XCTAssertFalse(viewModel.isLoading)
+    }
+
+    func test_popularReposViewModel_paginationAppendsResults() async {
+        let mockNetworkService = MockNetworkService()
+        let viewModel = PopularReposViewModel(networkService: mockNetworkService)
+
+        // Fetch page 1
+        await viewModel.fetchPopularRepositories(page: 1)
+        XCTAssertEqual(viewModel.repositories.count, 3)
+        XCTAssertEqual(viewModel.currentPage, 1)
+
+        // Fetch page 2
+        await viewModel.fetchPopularRepositories(page: 2)
+        XCTAssertEqual(viewModel.repositories.count, 6) // 3 from page 1 + 3 from page 2
+        XCTAssertEqual(viewModel.currentPage, 2)
+    }
+
+    func test_popularReposViewModel_loadNextPage() async {
+        let mockNetworkService = MockNetworkService()
+        let viewModel = PopularReposViewModel(networkService: mockNetworkService)
+
+        // Initial fetch
+        await viewModel.fetchPopularRepositories(page: 1)
+        XCTAssertEqual(viewModel.currentPage, 1)
+
+        // Load next page
+        await viewModel.loadNextPage()
+        XCTAssertEqual(viewModel.currentPage, 2)
+        XCTAssertEqual(viewModel.repositories.count, 6)
+    }
+
+    func test_popularReposViewModel_doesNotLoadWhenNoMorePages() async {
+        let mockNetworkService = MockNetworkService()
+        let viewModel = PopularReposViewModel(networkService: mockNetworkService)
+
+        // Manually set hasMorePages to false
+        viewModel.hasMorePages = false
+        let initialCount = viewModel.repositories.count
+
+        await viewModel.loadNextPage()
+
+        // Should not have loaded more
+        XCTAssertEqual(viewModel.repositories.count, initialCount)
+    }
+
+    func test_popularReposViewModel_refresh() async {
+        let mockNetworkService = MockNetworkService()
+        let viewModel = PopularReposViewModel(networkService: mockNetworkService)
+
+        // Initial fetch
+        await viewModel.fetchPopularRepositories(page: 1)
+        await viewModel.fetchPopularRepositories(page: 2)
+        XCTAssertEqual(viewModel.repositories.count, 6)
+        XCTAssertEqual(viewModel.currentPage, 2)
+
+        // Refresh
+        await viewModel.refresh()
+
+        XCTAssertEqual(viewModel.repositories.count, 3) // Reset to page 1 only
+        XCTAssertEqual(viewModel.currentPage, 1)
+        XCTAssertTrue(viewModel.hasMorePages)
     }
 }
