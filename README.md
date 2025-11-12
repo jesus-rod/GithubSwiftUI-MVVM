@@ -96,6 +96,275 @@ actor NetworkService: NetworkServiceProtocol {
 - Clean async/await API
 - Safe concurrent access from multiple ViewModels
 
+## Swift Concurrency Architecture
+
+This app implements a comprehensive Swift Concurrency model ensuring thread safety and preventing data races.
+
+### Concurrency Domains & Data Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                          Main Thread (@MainActor)                    │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                          SwiftUI Views                          │ │
+│  │  • ContentView        • RepositoriesView                       │ │
+│  │  • FollowersView      • PopularRepositoriesListView            │ │
+│  └───────────────────────────┬────────────────────────────────────┘ │
+│                              │ Observe (@Observable)                 │
+│                              ▼                                        │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    ViewModels (@MainActor)                      │ │
+│  │  • UserViewModel           • ReposViewModel                    │ │
+│  │  • FollowersViewModel      • PopularReposViewModel             │ │
+│  │                                                                 │ │
+│  │  State Properties:                                              │ │
+│  │  • user: GHUser?           • isLoading: Bool                   │ │
+│  │  • errorMessage: String?   • repositories: [GHRepo]            │ │
+│  └───────────────────────────┬────────────────────────────────────┘ │
+└────────────────────────────────┼───────────────────────────────────┘
+                                 │
+                                 │ async/await calls
+                                 │ (crosses actor boundary)
+                                 │
+┌────────────────────────────────▼───────────────────────────────────┐
+│                    NetworkServiceProtocol: Sendable                 │
+│                  (Ensures safe cross-actor passing)                 │
+└────────────────────────────────┬───────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      Actor Isolation Domain                          │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                  actor NetworkService                           │ │
+│  │                                                                 │ │
+│  │  Private Isolated State:                                        │ │
+│  │  • decoder: JSONDecoder  (thread-safe within actor)            │ │
+│  │  • session: URLSession   (thread-safe within actor)            │ │
+│  │  • baseURL: String       (immutable)                           │ │
+│  │                                                                 │ │
+│  │  Methods (automatically serialized):                            │ │
+│  │  • fetchUser(username:) async throws -> GHUser                 │ │
+│  │  • fetchRepos(for:) async throws -> [GHRepo]                   │ │
+│  │  • fetchFollowers(for:) async throws -> [GHUser]               │ │
+│  │  • searchPopularRepositories(...) async throws -> SearchResp... │ │
+│  │  • fetch<T: Decodable>(endpoint:) async throws -> T            │ │
+│  └───────────────────────────┬────────────────────────────────────┘ │
+└────────────────────────────────┼───────────────────────────────────┘
+                                 │
+                                 │ URLSession.data(from:)
+                                 │ (Foundation's async API)
+                                 │
+                                 ▼
+                    ┌─────────────────────────┐
+                    │    Network I/O          │
+                    │  (Background Threads)   │
+                    │   • HTTP Requests       │
+                    │   • JSON Parsing        │
+                    └─────────────────────────┘
+
+                                 │
+                                 │ Returns
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Sendable Data Models                              │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │  struct GHUser: Decodable, Identifiable, Sendable             │ │
+│  │  struct GHRepo: Decodable, Identifiable, Sendable             │ │
+│  │  struct SearchResponse<T: Sendable>: Decodable, Sendable      │ │
+│  │  struct RepositoryOwner: Decodable, Sendable                  │ │
+│  │                                                                 │ │
+│  │  ✅ Safe to pass between actors (value types, immutable)       │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Concurrency Flow Explained
+
+#### 1. **User Interaction → Main Actor**
+```swift
+// User taps button in SwiftUI View
+// Already on @MainActor (SwiftUI views run on main thread)
+Button("Load User") {
+    Task {
+        await viewModel.fetchUser("octocat")  // Still on @MainActor
+    }
+}
+```
+
+#### 2. **ViewModel (Main Actor) → Actor**
+```swift
+@MainActor
+class UserViewModel {
+    func fetchUser(_ username: String) async {
+        isLoading = true  // ✅ Main thread update
+
+        // Crosses actor boundary (suspension point)
+        user = try await networkService.fetchUser(username: username)
+
+        isLoading = false  // ✅ Back on Main thread
+    }
+}
+```
+
+**What happens at `try await`:**
+- Call enters the `NetworkService` actor's isolated context
+- Current task suspends (doesn't block main thread)
+- Network request executes in actor's serial queue
+- When complete, execution resumes on main thread
+- UI updates happen safely on main thread
+
+#### 3. **Actor Serialization**
+```swift
+actor NetworkService {
+    private let decoder: JSONDecoder  // ✅ Protected by actor
+    private let session: URLSession   // ✅ Protected by actor
+
+    func fetchUser(username: String) async throws -> GHUser {
+        // Multiple concurrent calls are automatically serialized
+        // No data races on decoder or session
+        try await fetch(endpoint: "/users/\(username)")
+    }
+}
+```
+
+**Actor guarantees:**
+- Only one task accesses actor's state at a time
+- Automatic serialization of async methods
+- No manual locks or semaphores needed
+
+#### 4. **Sendable Boundary Crossing**
+```swift
+// Data returned from actor must be Sendable
+actor NetworkService: NetworkServiceProtocol {  // ✅ Protocol is Sendable
+    func fetchUser(username: String) async throws -> GHUser {  // ✅ GHUser is Sendable
+        // Returns value type (struct) - safe to pass
+        return decodedUser
+    }
+}
+
+struct GHUser: Sendable {  // ✅ Structs with Sendable fields are Sendable
+    let id: Int              // ✅ Int is Sendable
+    let login: String        // ✅ String is Sendable
+    let avatarUrl: String    // ✅ String is Sendable
+    // All fields are Sendable = struct is Sendable
+}
+```
+
+### Key Concurrency Guarantees
+
+| Component | Concurrency Type | Thread Safety | Data Access |
+|-----------|-----------------|---------------|-------------|
+| **Views** | `@MainActor` | Main thread only | Read ViewModel state |
+| **ViewModels** | `@MainActor` | Main thread only | Modify state, call actor |
+| **NetworkService** | `actor` | Serial executor | Protected mutable state |
+| **Models** | `Sendable` struct | Immutable | Safe across boundaries |
+| **URLSession** | Thread-safe | Any thread | Foundation handles sync |
+
+### Race Condition Prevention
+
+**Without Swift Concurrency (dangerous):**
+```swift
+// ❌ Potential race condition
+class UnsafeNetworkService {
+    private var decoder = JSONDecoder()  // Shared mutable state
+
+    func fetchUser() async -> GHUser {
+        // Multiple threads could access decoder simultaneously!
+        return try decoder.decode(GHUser.self, from: data)
+    }
+}
+```
+
+**With Swift Concurrency (safe):**
+```swift
+// ✅ Race condition impossible
+actor NetworkService {
+    private let decoder = JSONDecoder()  // Actor-isolated
+
+    func fetchUser() async throws -> GHUser {
+        // Swift guarantees only one task accesses this at a time
+        return try decoder.decode(GHUser.self, from: data)
+    }
+}
+```
+
+### Concurrency Best Practices Demonstrated
+
+1. **✅ @MainActor for UI Layer**
+   - All ViewModels marked with `@MainActor`
+   - Ensures UI updates happen on main thread
+   - SwiftUI requires this for state changes
+
+2. **✅ Actor for Shared Mutable State**
+   - `NetworkService` is an actor
+   - Protects `decoder`, `session`, and internal state
+   - Automatic serialization of access
+
+3. **✅ Sendable for Cross-Actor Data**
+   - All models conform to `Sendable`
+   - Value types (structs) with Sendable fields
+   - Safe to pass between actors
+
+4. **✅ Protocol with Sendable Constraint**
+   ```swift
+   protocol NetworkServiceProtocol: Sendable {
+       func fetchUser(username: String) async throws -> GHUser
+   }
+   ```
+   - Ensures implementations are thread-safe
+   - Enables safe dependency injection
+
+5. **✅ Generic Sendable Constraints**
+   ```swift
+   struct SearchResponse<T: Decodable & Sendable>: Sendable {
+       let items: [T]
+   }
+   ```
+   - Propagates Sendable requirement to generic types
+   - Compile-time safety for generic data
+
+6. **✅ Structured Concurrency**
+   - Using `async/await` instead of completion handlers
+   - Tasks are properly scoped
+   - Automatic cancellation propagation
+
+7. **✅ No Manual Synchronization**
+   - No `DispatchQueue.sync/async`
+   - No locks, semaphores, or atomics
+   - Swift Concurrency handles it
+
+### Testing Concurrency
+
+The test suite includes concurrent access tests:
+
+```swift
+func test_networkService_canHandleConcurrentRequests() async throws {
+    // Multiple concurrent requests to the actor
+    async let user1 = service.fetchUser(username: "user1")
+    async let user2 = service.fetchUser(username: "user2")
+    async let repos = service.fetchRepos(for: "user3")
+
+    // All complete safely without data races
+    let _ = try await user1
+    let _ = try await user2
+    let _ = try await repos
+}
+```
+
+### Performance Benefits
+
+1. **No Thread Blocking**
+   - `async/await` suspends tasks instead of blocking threads
+   - Main thread stays responsive during network calls
+
+2. **Efficient Resource Usage**
+   - Swift runtime manages thread pool
+   - Fewer threads than callback-based code
+
+3. **Cooperative Cancellation**
+   - Task cancellation propagates automatically
+   - Resources freed promptly
+
 ### Error Handling
 
 Comprehensive error handling with custom error types:
